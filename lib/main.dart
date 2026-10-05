@@ -1,3 +1,9 @@
+// In-Class Activity 07 — Digital Pet
+// Student: Clarence Li, Seul An Kim
+// Date: October 5, 2026
+
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 void main() => runApp(const PetApp());

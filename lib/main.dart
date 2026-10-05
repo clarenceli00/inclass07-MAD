@@ -201,15 +201,27 @@ class _PetAppState extends State<PetCareApp> {
                 child: SizedBox(
                   width: 300,
                   height: 300,
-
-                  child: CustomPaint(
-                    painter: PetPresenter(
-                      //THIS IS THE WIDGET WHERE THE PET IS CREATED
+                  child: ColorFiltered(
+                    colorFilter: ColorFilter.mode(
+                      _moodColor,
+                      BlendMode.modulate,
+                    ),
+                    child: Image.asset(
+                      'assets/images/PetImage.jpg',
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),
               ),
             ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(_moodIcon),
+              const SizedBox(width: 6),
+              Text('Mood: $_moodText'),
+            ],
           ),
           Padding(
             padding: const EdgeInsets.all(16),
@@ -248,19 +260,5 @@ class _PetAppState extends State<PetCareApp> {
         ],
       ),
     );
-  }
-}
-
-class PetPresenter extends CustomPainter {
-  PetPresenter(); // required variables to "paint" the pet
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // TODO: implement paint
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
   }
 }

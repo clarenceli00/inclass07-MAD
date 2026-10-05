@@ -1,122 +1,235 @@
+// In-Class Activity 06 — Drawing with Flutter
+// Student: Clarence Li
+// Date: September 26, 2026
+
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+void main() => runApp(const PetApp());
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class PetApp extends StatelessWidget {
+  const PetApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      title: 'Digital Pet App',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(colorSchemeSeed: Colors.indigo, useMaterial3: true),
+      home: const PetCareApp(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class PetCareApp extends StatefulWidget {
+  const PetCareApp({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<PetCareApp> createState() => _PetAppState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _PetAppState extends State<PetCareApp> {
+  int _happiness = 50; // all states from 0 to 100
+  int _hunger = 50; // 0 means full; 100 means starving.
+  int _energy = 70;
+  int _clampMeter(int value) => value.clamp(0, 100).toInt();
+  Timer? _hungerTimer;
+  Timer? _highMoodTimer;
+  bool _gameOver = false;
+  bool _hasWon = false;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+  void _updateOutcome() {
+    if (_gameOver || _hasWon) return;
+
+    if (_hunger == 100 && _happiness <= 10) {
+      _highMoodTimer?.cancel();
+      _hungerTimer?.cancel();
+      setState(() => _gameOver = true);
+      return;
+    }
+
+    if (_happiness <= 80) {
+      _highMoodTimer?.cancel();
+      _highMoodTimer = null;
+      return;
+    }
+
+    _highMoodTimer ??= Timer(const Duration(seconds: 20), () {
+      _highMoodTimer = null;
+      if (!mounted || _gameOver || _happiness <= 80) return;
+      setState(() => _hasWon = true);
+      _hungerTimer?.cancel();
     });
   }
 
   @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+  void initState() {
+    super.initState();
+    _startHungerTimer();
+  }
+
+  void _startHungerTimer() {
+    _hungerTimer?.cancel();
+    _hungerTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (!mounted || _gameOver || _hasWon) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        if (_hunger + 5 > 100) {
+          _hunger = 100;
+          _happiness = _clampMeter(_happiness - 20);
+        } else {
+          _hunger += 5;
+        }
+      });
+      _updateOutcome();
+    });
+  }
+
+  @override
+  void dispose() {
+    _hungerTimer?.cancel();
+    _highMoodTimer?.cancel();
+    super.dispose();
+  }
+
+  void _feedPet() {
+    if (_gameOver || _hasWon) return;
+
+    final nextHunger = _clampMeter(_hunger - 10);
+    final happinessChange = nextHunger < 30 ? -20 : 10;
+    final nextHappiness = _clampMeter(_happiness + happinessChange);
+
+    setState(() {
+      _hunger = nextHunger;
+      _happiness = nextHappiness;
+    });
+    _updateOutcome();
+  }
+
+  void _playPet() {
+    if (_gameOver || _hasWon) return;
+    setState(() {
+      _happiness = _clampMeter(_happiness + 10);
+      _hunger = _clampMeter(_hunger + 5);
+      _energy = _clampMeter(_energy - 10);
+    });
+    _updateOutcome();
+  }
+
+  void _restPet() {
+    if (_gameOver || _hasWon) return;
+    setState(() {
+      _energy = _clampMeter(_energy + 20);
+    });
+    _updateOutcome();
+  }
+
+  void _resetStats() {
+    _highMoodTimer?.cancel();
+    _highMoodTimer = null;
+    setState(() {
+      _happiness = 50;
+      _hunger = 50;
+      _energy = 70;
+      _gameOver = false;
+      _hasWon = false;
+    });
+    _startHungerTimer();
+  }
+
+  Widget _levelBar(String label, int value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('$label: $value/100'),
+          const SizedBox(height: 4),
+          LinearProgressIndicator(
+            value: value / 100,
+            semanticsLabel: label,
+            semanticsValue: '$value',
+          ),
+        ],
       ),
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Digital Pet App')),
+      body: Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.contain,
+                child: SizedBox(
+                  width: 300,
+                  height: 300,
+                  child: CustomPaint(
+                    painter: PetPresenter(
+                      //THIS IS THE WIDGET WHERE THE PET IS CREATED
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                _levelBar('Happiness', _happiness),
+                _levelBar('Hunger', _hunger),
+                _levelBar('Energy', _energy),
+                if (_gameOver) const Text('Game over! Reset to try again.'),
+                if (_hasWon) const Text('You won! Reset to play again.'),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ElevatedButton(
+                      onPressed: _gameOver || _hasWon ? null : _playPet,
+                      child: const Text('Play'),
+                    ),
+                    ElevatedButton(
+                      onPressed: _gameOver || _hasWon ? null : _feedPet,
+                      child: const Text('Feed'),
+                    ),
+                    ElevatedButton(
+                      onPressed: _gameOver || _hasWon ? null : _restPet,
+                      child: const Text('Rest'),
+                    ),
+                    ElevatedButton(
+                      onPressed: _resetStats,
+                      child: const Text('Reset'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class PetPresenter extends CustomPainter {
+  PetPresenter(); // required variables to "paint" the pet
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // TODO: implement paint
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
   }
 }

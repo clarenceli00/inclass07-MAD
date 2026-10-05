@@ -109,6 +109,36 @@ class _PetAppState extends State<PetCareApp> {
     _updateOutcome();
   }
 
+  Color get _moodColor {
+    if (_happiness > 70) {
+      return Colors.green;
+    } else if (_happiness >= 30) {
+      return Colors.yellow;
+    } else {
+      return Colors.red;
+    }
+  }
+
+  String get _moodText {
+    if (_happiness > 70) {
+      return 'Happy';
+    } else if (_happiness >= 30) {
+      return 'Okay';
+    } else {
+      return 'Sad';
+    }
+  }
+
+  IconData get _moodIcon {
+    if (_happiness > 70) {
+      return Icons.sentiment_very_satisfied;
+    } else if (_happiness >= 30) {
+      return Icons.sentiment_neutral;
+    } else {
+      return Icons.sentiment_very_dissatisfied;
+    }
+  }
+
   void _playPet() {
     if (_gameOver || _hasWon) return;
     setState(() {
@@ -171,6 +201,7 @@ class _PetAppState extends State<PetCareApp> {
                 child: SizedBox(
                   width: 300,
                   height: 300,
+
                   child: CustomPaint(
                     painter: PetPresenter(
                       //THIS IS THE WIDGET WHERE THE PET IS CREATED

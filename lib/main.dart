@@ -92,6 +92,7 @@ class _PetAppState extends State<PetCareApp> {
   void dispose() {
     _hungerTimer?.cancel();
     _highMoodTimer?.cancel();
+    _nameController.dispose();
     super.dispose();
   }
 
@@ -170,6 +171,19 @@ class _PetAppState extends State<PetCareApp> {
     _startHungerTimer();
   }
 
+  final TextEditingController _nameController = TextEditingController();
+  String _petName = '';
+
+  void _confirmName() {
+    final enteredName = _nameController.text.trim();
+
+    if (enteredName.isEmpty) return;
+
+    setState(() {
+      _petName = enteredName;
+    });
+  }
+
   Widget _levelBar(String label, int value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -194,6 +208,27 @@ class _PetAppState extends State<PetCareApp> {
       appBar: AppBar(title: const Text('Digital Pet App')),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Pet Name',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: _confirmName,
+                  child: const Text('Confirm'),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: Center(
               child: FittedBox(
@@ -215,6 +250,17 @@ class _PetAppState extends State<PetCareApp> {
               ),
             ),
           ),
+
+          const SizedBox(height: 12),
+
+          if (_petName.isNotEmpty)
+            Text(
+              'Pet Name: $_petName',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+
+          const SizedBox(height: 8),
+
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

@@ -1,9 +1,3 @@
-// In-Class Activity 06 — Drawing with Flutter
-// Student: Clarence Li
-// Date: September 26, 2026
-
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 void main() => runApp(const PetApp());

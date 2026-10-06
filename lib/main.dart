@@ -63,6 +63,27 @@ class _PetAppState extends State<PetCareApp> {
     });
   }
 
+  String _reaction = '';
+  bool _showReaction = false;
+  Timer? _reactionTimer;
+
+  void _showActionReaction(String emoji) {
+    _reactionTimer?.cancel();
+
+    setState(() {
+      _reaction = emoji;
+      _showReaction = true;
+    });
+
+    _reactionTimer = Timer(const Duration(milliseconds: 900), () {
+      if (!mounted) return;
+
+      setState(() {
+        _showReaction = false;
+      });
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -92,6 +113,7 @@ class _PetAppState extends State<PetCareApp> {
   void dispose() {
     _hungerTimer?.cancel();
     _highMoodTimer?.cancel();
+    _reactionTimer?.cancel();
     _nameController.dispose();
     super.dispose();
   }
@@ -107,6 +129,8 @@ class _PetAppState extends State<PetCareApp> {
       _hunger = nextHunger;
       _happiness = nextHappiness;
     });
+
+    _showActionReaction('🍖');
     _updateOutcome();
   }
 
@@ -142,19 +166,25 @@ class _PetAppState extends State<PetCareApp> {
 
   void _playPet() {
     if (_gameOver || _hasWon) return;
+
     setState(() {
       _happiness = _clampMeter(_happiness + 10);
       _hunger = _clampMeter(_hunger + 5);
       _energy = _clampMeter(_energy - 10);
     });
+
+    _showActionReaction('🎾');
     _updateOutcome();
   }
 
   void _restPet() {
     if (_gameOver || _hasWon) return;
+
     setState(() {
       _energy = _clampMeter(_energy + 20);
     });
+
+    _showActionReaction('💤');
     _updateOutcome();
   }
 
@@ -182,6 +212,8 @@ class _PetAppState extends State<PetCareApp> {
     setState(() {
       _petName = enteredName;
     });
+
+    _showActionReaction('❤️');
   }
 
   Widget _levelBar(String label, int value) {
@@ -248,6 +280,16 @@ class _PetAppState extends State<PetCareApp> {
                   ),
                 ),
               ),
+            ),
+          ),
+
+          AnimatedSlide(
+            duration: const Duration(milliseconds: 300),
+            offset: _showReaction ? Offset.zero : const Offset(0, 0.4),
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 300),
+              opacity: _showReaction ? 1.0 : 0.0,
+              child: Text(_reaction, style: const TextStyle(fontSize: 40)),
             ),
           ),
 

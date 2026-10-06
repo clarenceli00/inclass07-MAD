@@ -1,5 +1,5 @@
 // In-Class Activity 07 — Digital Pet
-// Student: Clarence Li, Seul An Kim
+// Team: Clarence Li, Seul An Kim
 // Date: October 5, 2026
 
 import 'dart:async';
@@ -55,7 +55,7 @@ class _PetAppState extends State<PetCareApp> {
       return;
     }
 
-    _highMoodTimer ??= Timer(const Duration(seconds: 20), () {
+    _highMoodTimer ??= Timer(const Duration(minutes: 3), () {
       _highMoodTimer = null;
       if (!mounted || _gameOver || _happiness <= 80) return;
       setState(() => _hasWon = true);
@@ -128,7 +128,7 @@ class _PetAppState extends State<PetCareApp> {
 
   void _startHungerTimer() {
     _hungerTimer?.cancel();
-    _hungerTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+    _hungerTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
       if (!mounted || _gameOver || _hasWon) {
         timer.cancel();
         return;

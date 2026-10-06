@@ -63,6 +63,42 @@ class _PetAppState extends State<PetCareApp> {
     });
   }
 
+  String get _petSpeech {
+    if (_gameOver) {
+      return 'I do not feel well...';
+    }
+
+    if (_hasWon) {
+      return 'I am so happy! We did it!';
+    }
+
+    if (_hunger >= 80) {
+      return 'I am really hungry!';
+    }
+
+    if (_energy <= 20) {
+      return 'I am very tired...';
+    }
+
+    if (_happiness < 30) {
+      return 'I feel a little sad.';
+    }
+
+    if (_happiness > 70 && _hunger < 50 && _energy > 40) {
+      return 'I feel great!';
+    }
+
+    if (_hunger >= 60) {
+      return 'Can I have some food?';
+    }
+
+    if (_energy <= 40) {
+      return 'I could use some rest.';
+    }
+
+    return 'I am doing okay!';
+  }
+
   String _reaction = '';
   bool _showReaction = false;
   Timer? _reactionTimer;
@@ -280,6 +316,20 @@ class _PetAppState extends State<PetCareApp> {
                   ),
                 ),
               ),
+            ),
+          ),
+
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              _petSpeech,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16),
             ),
           ),
 

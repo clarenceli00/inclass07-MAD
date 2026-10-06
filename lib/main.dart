@@ -1,6 +1,6 @@
-// In-Class Activity 06 — Drawing with Flutter
-// Student: Clarence Li
-// Date: September 26, 2026
+// In-Class Activity 07 — Digital Pet
+// Student: Clarence Li, Seul An Kim
+// Date: October 5, 2026
 
 import 'dart:async';
 
@@ -63,6 +63,63 @@ class _PetAppState extends State<PetCareApp> {
     });
   }
 
+  String get _petSpeech {
+    if (_gameOver) {
+      return 'I do not feel well...';
+    }
+
+    if (_hasWon) {
+      return 'I am so happy! We did it!';
+    }
+
+    if (_hunger >= 80) {
+      return 'I am really hungry!';
+    }
+
+    if (_energy <= 20) {
+      return 'I am very tired...';
+    }
+
+    if (_happiness < 30) {
+      return 'I feel a little sad.';
+    }
+
+    if (_happiness > 70 && _hunger < 50 && _energy > 40) {
+      return 'I feel great!';
+    }
+
+    if (_hunger >= 60) {
+      return 'Can I have some food?';
+    }
+
+    if (_energy <= 40) {
+      return 'I could use some rest.';
+    }
+
+    return 'I am doing okay!';
+  }
+
+  String _reaction = '';
+  bool _showReaction = false;
+  Timer? _reactionTimer;
+
+  void _showActionReaction(String emoji) {
+    _reactionTimer?.cancel();
+
+    setState(() {
+      _reaction = emoji;
+      _showReaction = true;
+    });
+
+    _reactionTimer = Timer(const Duration(milliseconds: 900), () {
+      if (!mounted) return;
+
+      setState(() {
+        _showReaction = false;
+      });
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -92,6 +149,8 @@ class _PetAppState extends State<PetCareApp> {
   void dispose() {
     _hungerTimer?.cancel();
     _highMoodTimer?.cancel();
+    _reactionTimer?.cancel();
+    _nameController.dispose();
     super.dispose();
   }
 
@@ -106,24 +165,62 @@ class _PetAppState extends State<PetCareApp> {
       _hunger = nextHunger;
       _happiness = nextHappiness;
     });
+
+    _showActionReaction('🍖');
     _updateOutcome();
+  }
+
+  Color get _moodColor {
+    if (_happiness > 70) {
+      return Colors.green;
+    } else if (_happiness >= 30) {
+      return Colors.yellow;
+    } else {
+      return Colors.red;
+    }
+  }
+
+  String get _moodText {
+    if (_happiness > 70) {
+      return 'Happy';
+    } else if (_happiness >= 30) {
+      return 'Okay';
+    } else {
+      return 'Sad';
+    }
+  }
+
+  IconData get _moodIcon {
+    if (_happiness > 70) {
+      return Icons.sentiment_very_satisfied;
+    } else if (_happiness >= 30) {
+      return Icons.sentiment_neutral;
+    } else {
+      return Icons.sentiment_very_dissatisfied;
+    }
   }
 
   void _playPet() {
     if (_gameOver || _hasWon) return;
+
     setState(() {
       _happiness = _clampMeter(_happiness + 10);
       _hunger = _clampMeter(_hunger + 5);
       _energy = _clampMeter(_energy - 10);
     });
+
+    _showActionReaction('🎾');
     _updateOutcome();
   }
 
   void _restPet() {
     if (_gameOver || _hasWon) return;
+
     setState(() {
       _energy = _clampMeter(_energy + 20);
     });
+
+    _showActionReaction('💤');
     _updateOutcome();
   }
 
@@ -138,6 +235,21 @@ class _PetAppState extends State<PetCareApp> {
       _hasWon = false;
     });
     _startHungerTimer();
+  }
+
+  final TextEditingController _nameController = TextEditingController();
+  String _petName = '';
+
+  void _confirmName() {
+    final enteredName = _nameController.text.trim();
+
+    if (enteredName.isEmpty) return;
+
+    setState(() {
+      _petName = enteredName;
+    });
+
+    _showActionReaction('❤️');
   }
 
   Widget _levelBar(String label, int value) {
@@ -164,6 +276,27 @@ class _PetAppState extends State<PetCareApp> {
       appBar: AppBar(title: const Text('Digital Pet App')),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Pet Name',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: _confirmName,
+                  child: const Text('Confirm'),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: Center(
               child: FittedBox(
@@ -171,14 +304,62 @@ class _PetAppState extends State<PetCareApp> {
                 child: SizedBox(
                   width: 300,
                   height: 300,
-                  child: CustomPaint(
-                    painter: PetPresenter(
-                      //THIS IS THE WIDGET WHERE THE PET IS CREATED
+                  child: ColorFiltered(
+                    colorFilter: ColorFilter.mode(
+                      _moodColor,
+                      BlendMode.modulate,
+                    ),
+                    child: Image.asset(
+                      'assets/images/PetImage.jpg',
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),
               ),
             ),
+          ),
+
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              _petSpeech,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16),
+            ),
+          ),
+
+          AnimatedSlide(
+            duration: const Duration(milliseconds: 300),
+            offset: _showReaction ? Offset.zero : const Offset(0, 0.4),
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 300),
+              opacity: _showReaction ? 1.0 : 0.0,
+              child: Text(_reaction, style: const TextStyle(fontSize: 40)),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          if (_petName.isNotEmpty)
+            Text(
+              'Pet Name: $_petName',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+
+          const SizedBox(height: 8),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(_moodIcon),
+              const SizedBox(width: 6),
+              Text('Mood: $_moodText'),
+            ],
           ),
           Padding(
             padding: const EdgeInsets.all(16),
@@ -217,19 +398,5 @@ class _PetAppState extends State<PetCareApp> {
         ],
       ),
     );
-  }
-}
-
-class PetPresenter extends CustomPainter {
-  PetPresenter(); // required variables to "paint" the pet
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // TODO: implement paint
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
   }
 }
